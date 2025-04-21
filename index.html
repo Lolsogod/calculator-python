@@ -240,6 +240,20 @@
             color: white;
             font-size: 20px;
         }
+        #normalize {
+            background-color: #4CAF50;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            color: white;
+            font-size: 20px;
+        }
+
+        #normalize:hover {
+            background-color: #45a049;
+        }
 
         .graph {
             height: calc(98vh - 30px);
@@ -344,6 +358,62 @@
                 font-size: 0.75rem;
             }
         }
+        .row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+
+        .col-md-6 {
+          flex: 1 1 calc(50% - 20px);
+          min-width: 400px;
+        }
+
+        .chart-container {
+          position: relative;
+          height: 400px;
+          width: 100%;
+          background: white;
+          border: 1px solid #ddd;
+          padding: 15px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container canvas {
+          width: 100% !important;
+          height: 100% !important;
+        }
+        .formulas {
+            padding: 15px;
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+
+        .formula-item {
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+
+        .formula-item sub,
+        .formula-item sup {
+            font-size: 0.8em;
+            line-height: 1;
+        }
+        /*
+        .plot-wrapper{
+            display: flex;
+            gap: 10px;
+        }*/
     </style>
 </head>
 
@@ -397,10 +467,15 @@
     <section id="result">
         <div class="inner">
             <header class="inner-header">
+                <button type="button" id="normalize" onclick="toggleNormalization()">Нормализовать</button>
                 <button type="button" id="close">X</button>
             </header>
             <div class="graph scrollable">
-                <canvas id="plot"></canvas>
+                <canvas id="plot1"></canvas>
+                <canvas id="plot2"></canvas>
+                <canvas id="plot3"></canvas>
+                <canvas id="plot4"></canvas>
+
                 <canvas id="radar1"></canvas>
                 <canvas id="radar2"></canvas>
                 <canvas id="radar3"></canvas>
@@ -415,6 +490,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        let isNormalized = false;
+        let originalSolution = [];
         // Параметры
         const params = {
             "1": "среднегодовой % выпускников-бакалавров",
@@ -717,9 +794,58 @@
         }
     </script>
     <script>
+      const lineLabelsPlugin = {
+            id: 'lineLabels',
+            afterDraw: (chart) => {
+                const ctx = chart.ctx;
+                ctx.save();
 
+                // Собираем все позиции подписей
+                const labelPositions = [];
+
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    if (meta.hidden) return;
+
+                    const data = meta.data;
+                    const middleIndex = Math.floor(data.length / 2);
+                    const point = data[middleIndex];
+                    const label = dataset.label;
+
+                    // Рассчитываем позицию
+                    const x = point.x;
+                    const y = point.y - 15;
+
+                    // Проверка на коллизии
+                    const collision = labelPositions.some(pos =>
+                        Math.abs(pos.x - x) < 60 && Math.abs(pos.y - y) < 20
+                    );
+
+                    if (!collision) {
+                        labelPositions.push({x, y});
+
+                        // Фон
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                        // Текст
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = dataset.borderColor;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(label, x, y);
+                    }
+                });
+
+                ctx.restore();
+            }
+        };
+
+        // Зарегистрировать плагин
+        Chart.register(lineLabelsPlugin);
         //Инициализация холстов для отрисовки графика и лепестковых диаграмм с применением Chart.js
-        const plot = document.getElementById('plot');
+        const plot1 = document.getElementById('plot1');
+        const plot2 = document.getElementById('plot2');
+        const plot3 = document.getElementById('plot3');
+        const plot4 = document.getElementById('plot4');
         const radar1 = document.getElementById('radar1');
         const radar2 = document.getElementById('radar2');
         const radar3 = document.getElementById('radar3');
@@ -734,7 +860,10 @@
 
         //объект доступа к холстам с графиками и диаграммами
         let chartObjects = {
-            'plot': null,
+            'plot1': null,
+            'plot2': null,
+            'plot3': null,
+            'plot4': null,
             't = 0': null,
             't = 0.2': null,
             't = 0.4': null,
@@ -774,7 +903,7 @@
                         resWin.style.display = "flex"
                     }
                 )
-                .catch(e => alert("Решение не найдено!"));
+                .catch(e => console.log(e));
                 ;
         }
 
@@ -785,53 +914,101 @@
 
         //отрисовка графиков изменения параметров xi(t) на основе объекта решений solution
         const creatrGraph = (solution) => {
+            originalSolution = solution;
+            const formData = getData();
 
-            //удаляем старый график
-            chartObjects['plot']?.destroy();
+           const normalizeData = (data) => {
+                return data.map(paramData => {
+                    const maxVal = Math.max(...paramData);
+                    return maxVal !== 0 ? paramData.map(val => val / maxVal) : paramData;
+                });
+            };
+            console.log(normalizeData(solution), solution, isNormalized)
+            const processedSolution = isNormalized ? normalizeData(solution) : solution;
+            // Define parameter groups and their respective canvas IDs
+            const groups = [
+                { start: 0, end: 7, canvasId: 'plot1', title: 'Parameters 1-8' },
+                { start: 8, end: 15, canvasId: 'plot2', title: 'Parameters 9-16' },
+                { start: 16, end: 23, canvasId: 'plot3', title: 'Parameters 17-24' },
+                { start: 24, end: 30, canvasId: 'plot4', title: 'Parameters 25-31' }
+            ];
 
-            //готовим шаблон для построения графика
-            let data = {
-                labels: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1],
-                datasets: [],
-            }
-
-            //заполняем массив datasets из шаблона
-            for (let i = 0; i < solution[0].length; i++) {
-
-                // получаем ряд значений для каждого параметра xi(t)
-                let values = [];
-                for (let j = 0; j < solution.length; j++) {
-                    values.push(solution[j][i]);
+            groups.forEach(group => {
+                // Destroy existing chart if present
+                if (chartObjects[group.canvasId]) {
+                    chartObjects[group.canvasId].destroy();
                 }
 
-                //формируем график очередного параметра xi(t)
-                let dataset = {
-                    label: 'X' + (i + 1),
-                    data: values,
-                    fill: false,
-                    borderColor: getColor(i),
-                    tension: 0.1,
-                    pointRadius: 0,
-                    borderDash: getLineStyle(i),
-                }
-                data.datasets.push(dataset);
-            }
+                // Prepare data for the current group
+                const data = {
+                    labels: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1],
+                    datasets: []
+                };
 
-            // Отрисовываем график
-            chartObjects['plot'] = new Chart(plot, {
-                type: 'line',
-                data: data,
-                options: {
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'right',
-                         }
-                    },
+                // Populate datasets for each parameter in the group
+                for (let i = group.start; i <= group.end; i++) {
+                    const values = [];
+                    for (let j = 0; j < processedSolution.length; j++) {
+                        values.push(processedSolution[j][i]);
+                    }
+                    data.datasets.push({
+                        label: `X${i + 1}`,
+                        data: values,
+                        fill: false,
+                        borderColor: getColor(i - group.start),
+                        tension: 0.1,
+                        pointRadius: 0,
+                        borderDash: getLineStyle(i - group.start)
+                    });
                 }
+
+                // Create the chart
+                const ctx = document.getElementById(group.canvasId).getContext('2d');
+                chartObjects[group.canvasId] = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        plugins: {
+                            legend: { display: true, position: 'right' },
+                            title: { display: true, text: group.title }
+                        }
+                    }
+                });
+                /*
+                const formulaContainer = document.getElementById(`formulas${group.canvasId.slice(-1)}`);
+                formulaContainer.innerHTML = '<h4>Соответствующие полиномы:</h4>';
+
+                Object.entries(funcs).forEach(([fnKey, param]) => {
+                    const paramNumber = parseInt(param);
+                    if (paramNumber >= group.start + 1 && paramNumber <= group.end + 1) {
+                        const fKey = `F${fnKey}`;
+                        const poly = formData.f[fKey]; // Используем данные из формы
+                        const formula = formatFormula(poly, param);
+
+                        const div = document.createElement('div');
+                        div.className = 'formula-item';
+                        div.innerHTML = `F<sub>${fnKey}</sub>(X<sub>${param}</sub>) = ${formula}`;
+                        formulaContainer.appendChild(div);
+                    }
+                });
+
+                 */
             });
-        }
+        };
 
+        const formatFormula = (poly, paramIndex) => {
+            let parts = [];
+            if (poly.a !== 0) parts.push(`${poly.a}X<sup>3</sup><sub>${paramIndex}</sub>`);
+            if (poly.b !== 0) parts.push(`${poly.b}X<sup>2</sup><sub>${paramIndex}</sub>`);
+            if (poly.c !== 0) parts.push(`${poly.c}X<sub>${paramIndex}</sub>`);
+            if (poly.d !== 0) parts.push(poly.d.toString());
+
+            let formula = parts.join(' + ')
+                .replace(/\+\s-/g, ' - ')
+                .replace(/(\d+)\s+\+\s+(-?\d+)/g, '$1 $2');
+
+            return formula || '0';
+        };
         //отрисовка лепестковых диаграмм для заданного временного среза на основе:
         // имени диаграммы chartName в объекте chartObjects
         // элемента холста plot
@@ -884,16 +1061,26 @@
         // Стилизация графиков
         const colors = ["red","orange","rgb(213, 216, 0)","rgb(7, 203, 0)","green","rgb(0, 207, 166)","blue","violet","purple","black","brown","gray"];
 
-        function getColor(i) {
-            return colors[i%colors.length];
-        }
-        
-        function getLineStyle(i) {
-            if (i <= colors.length - 1) return [];
-            if (i <= 2*colors.length - 1) return [5, 2];
-            if (i <= 3*colors.length - 1) return [20, 5, 20, 5];
+        function getColor(index) {
+            const colors = ["red","orange","#d5d800","#07cb00","green","#00cfa6","blue","violet","purple","black","brown","gray"];
+            return colors[index % colors.length];
         }
 
+        function getLineStyle(index) {
+            if (index <= colors.length - 1) return [];
+            if (index <= 2 * colors.length - 1) return [5, 2];
+            return [20, 5, 20, 5];
+        }
+
+        // Добавить функцию переключения нормализации
+        const toggleNormalization = () => {
+            isNormalized = !isNormalized;
+            document.querySelector('#normalize').textContent =
+                isNormalized ? "Отключить нормализацию" : "Включить нормализацию";
+
+            // Перерисовываем графики с текущими данными
+            creatrGraph(originalSolution);
+        };
     </script>
 </body>
 

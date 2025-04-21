@@ -160,7 +160,7 @@ def du_dt(u,t,c,f):
 @app.get("/")
 async def main():
     # Возвращаем в качестве ответа HTML-страницу, расположенную по адресу /home/AlexAranara/my_fastapi/web/index.html
-    return FileResponse("/home/heatdead/my_fastapi/web/index.html")
+    return FileResponse("index.html")
 
 # Указываем маршрут /api/count, по которому можно получить результаты вычислений для Практической работы 1
 # Тело данного POST-запрос имеет вид {"x0": <Словарь начальный значений>, "c": <Словарь констант>, "f": <Словарь полиномов>}
