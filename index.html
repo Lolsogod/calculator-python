@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТИПС2024 - Работа 1</title>
+    <meta name="description" content="By Ovchinnikov A., Grebennikova E., Suchkov D.">
+    <style>
+        .scrollable::-webkit-scrollbar {
+            width: 10px;
+        }
+        .scrollable::-webkit-scrollbar-track {
+            background: rgb(166, 193, 166);
+        }
+        .scrollable::-webkit-scrollbar-thumb {
+            background-color: green;
+            border: 2px solid rgb(0, 75, 0);
+        }
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: #f4f4f9;
+            font-family: 'Verdana', sans-serif;
+            color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial';
+        }
+
+        p {
+            margin: 0px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            padding-top: 3px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"]:focus{
+            outline: none;
+            background-color: rgb(255, 255, 255);
+        }
+
+        .x0 {
+            width: calc((99% - 400px)/2);
+        }
+        .c{
+            width: calc((99% - 400px)/2);
+        }
+        .f {
+            width: 400px;
+        }
+
+        h4 {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 30px;
+            font-size: 20px;
+        }
+
+        sub{
+            margin-top: 12px;
+        }
+        sup{
+            margin-top: -16px;
+        }
+        .sub{
+            margin-left: -8px;
+        }
+
+        .inputs {
+            height: calc(100% - 30px);
+            overflow-y: scroll;
+        }
+
+        .x0 input,
+        .c input {
+            border: 0;
+            border-left: 1px solid black;
+            text-align: center;
+            height: 100%;
+            background-color: rgb(208, 255, 162);
+            font-size: 16px;
+        }
+
+        .input-block {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid black;
+            padding: 1px;
+            background-color: rgb(220, 255, 220);
+            color: black
+        }
+
+        .input-block label {
+            width: 80%;
+            font-size: 16px;
+            padding: 3px;
+            font-weight: 500;
+        }
+
+        .input-block input {
+            width: 20%;
+            text-align: center;
+        }
+
+        .x0 .input-block label,
+        .x0 header .p-title {
+            width: 60%;
+        }
+
+        .x0 header .p,
+        .x0 input {
+            width: 20%;
+        }
+
+        header.input-block {
+            height: 30px;
+            overflow-y: scroll;
+        }
+
+        .x0 header p {
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .c header .p-title {
+            width: 80%;
+        }
+
+        .c header .p {
+            width: 20%;
+        }
+
+        .c header p {
+            text-align: center;
+            font-size: 20px;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            height: 30px;
+        }
+
+        .f header .p-title {
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .function {
+            display: flex;
+            align-items: center;
+            border-top: 1px solid black;
+            width: 100%;
+            padding: 3px;
+            background-color: rgb(220, 255, 220);
+        }
+
+        .function-block {
+            display: flex;
+            justify-content: space-evenly;
+            padding: 1px;
+            margin: 0 2px;
+        }
+
+        .function label {
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+            width: 30px;
+        }
+
+        .f-title {
+            width: 64px !important;
+            height: 100%;
+            font-size: 14px;
+        }
+
+        .function input {
+            text-align: center;
+            width: 50px;
+            height: 30px;
+            background-color: rgb(208, 255, 162);
+            font-size: 16px;
+            border: 1px solid black;
+        }
+
+        #result {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.262);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .inner {
+            width: 98vw;
+            height: 98vh;
+            background-color: white;
+        }
+
+        .inner-header {
+            height: 30px;
+            background-color: rgb(0, 45, 0);
+            display: flex;
+            justify-content: end;
+        }
+
+        #close {
+            background-color: red;
+            height: 30px;
+            width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            color: white;
+            font-size: 20px;
+        }
+
+        .graph {
+            height: calc(98vh - 30px);
+            width: 98vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            overflow-y: scroll;
+        }
+
+        canvas {
+            border: solid 1px black;
+        }
+
+        .inputs {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .values {
+            display: flex;
+            height: 90vh;
+            justify-content: space-between;
+        }
+        .values section {
+            border: 2px solid green;
+        }
+
+        .manage {
+            width: 100%;
+            height: 6vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .count {
+            background-color: #4CAF50;
+            font-size: 1.5rem;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 80%;
+            height: 100%;
+            margin-top: 10px;
+            border: 3px solid #2f6931;
+        }
+
+        .save {
+            background-color: #4CAF50;
+            font-size: 1rem;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 10%;
+            height: 100%;
+            margin-top: 10px;
+            border: 3px solid #2f6931;
+        }
+        .load {
+            background-color: #4CAF50;
+            font-size: 1rem;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 10%;
+            height: 100%;
+            margin-top: 10px;
+            border: 3px solid #2f6931;
+        }
+
+        .count:hover, .save:hover,.load:hover {
+            background-color: #45a049;
+        }
+        .inner-head{
+            width: 100%;
+            display: flex;
+            margin-right: 10px;
+        }
+        .p-title, .p{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .legend{
+            padding:2px;
+        }
+
+        @media(max-width: 1024px){
+            .values{
+                flex-direction: column;
+            }
+            .x0,.c,.f{
+                height: 33%;
+                width: 100%;
+            }
+            .count {
+                font-size: 1rem;
+            }
+            .load, .save{
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <form id="main">
+        <div class="values">
+            <section class="x0">
+                <header>
+                    <div class="inner-head">
+                        <p class="p-title">Параметры</p>
+                        <p class="p">Нач. зн.</p>
+                        <p class="p">Гран. зн.</p>
+                    </div>
+                </header>
+
+                <div class="inputs scrollable">
+                </div>
+            </section>
+
+            <section class="c">
+                <header>
+                    <div class="inner-head">
+                    <p class="p-title">Константа</p>
+                    <p class="p">Знач</p>
+                </div>
+                </header>
+
+                <div class="inputs scrollable"> 
+                </div>
+            </section>
+
+            <section class="f">
+                <header>
+                    <div class="inner-head">
+                        <p class="p-title">Полиномы</p>
+                    </div>
+                </header>
+
+                <div class="inputs scrollable">
+                </div>
+            </section>
+        </div>
+
+        <section class="manage">
+            <button class="count" type="submit">Рассчитать</button>
+            <button class="save" type="button" onclick="save()">Сохранить</button>
+            <button class="load" type="button" onclick="load()">Загрузить</button>
+        </section>
+    </form>
+
+    <section id="result">
+        <div class="inner">
+            <header class="inner-header">
+                <button type="button" id="close">X</button>
+            </header>
+            <div class="graph scrollable">
+                <canvas id="plot"></canvas>
+                <canvas id="radar1"></canvas>
+                <canvas id="radar2"></canvas>
+                <canvas id="radar3"></canvas>
+                <canvas id="radar4"></canvas>
+                <canvas id="radar5"></canvas>
+                <canvas id="radar6"></canvas>
+                <div class="legend">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Параметры
+        const params = {
+            "1": "среднегодовой % выпускников-бакалавров",
+            "2": "среднегодовой % выпускников-магистров",
+            "3": "текущий % выпускников-бакалавров, закончивших обучение в срок", 
+            "4": "текущий % выпускников-магистров, закончивших обучение в срок",
+            "5": "доля цитирований",
+            "6": "общее количество публикаций",
+            "7": "текущий % доходов из внешних источников",
+            "8": "текущее количество исследований в области искусств",
+            "9": "текущее количество часто цитируемых публикаций",
+            "10": "текущий % совместных с регионом исследовательских публикаций",
+            "11": "среднегодовой % постдоков",
+            "12": "текущий % совместных с промышленными предприятиями",
+            "13": "текущий % доходов от сторонних организаций",
+            "14": "текущее количество присужденных патентов",
+            "15": "текущий % совместных с частными организациями патентов",
+            "16": "текущее количество малых инновационных предприятий на 1 штатного академического сотрудника",
+            "17": "текущий % исследовательских публикаций по патентам",
+            "18": "% доходов от непрерывного профессионального развития",
+            "19": "текущее количество программ на иностранных языках для бакалавров",
+            "20": "текущее количество исследований в области искусств",
+            "21": "среднегодовой % иностранных студентов",
+            "22": "среднегодовой % студентов, участвующих в программах обмена",
+            "23": "среднегодовой % студентов, участвующих в международных программах",
+            "24": "среднегодовой % иностранных сотрудников",
+            "25": "текущий % совместных международных публикаций",
+            "26": "среднегодовой % иностранных выпускников-докторантов",
+            "27": "среднегодовой % выпускников-бакалавров, работающих в регионе",
+            "28": "среднегодовой % выпускников-магистров, работающих в регионе",
+            "29": "среднегодовой % студентов, участвующих в программах обмена",
+            "30": "текущий % совместных с регионом исследовательских публикаций",
+            "31": "текущий % доходов из региональных источников",
+        }
+
+        const paramsDiv = document.querySelector("#main .values .x0 .inputs")
+        const legendDiv = document.querySelector(".graph .legend")
+
+        for(let key in params){
+            paramsDiv.innerHTML +=
+            `<div class="input-block">
+                <label for="X${key}">[X<sub>${key}</sub>] - ${params[key]}</label>
+                <input id="X${key}" type="number" step="0.001" min="0" max="1" required value="0.5">
+                <input id="X${key}max" type="number" step="0.001" min="0" max="1" required value="1">
+            </div>`;
+
+            legendDiv.innerHTML +=
+            `<p>[X<sub>${key}</sub>] - ${params[key]}</p>`;
+        }
+
+        // Константы
+        const consts = {
+            "BPn": "% выпускников-бакалавров в начале периода",  
+            "BPk": "% выпускников-бакалавров в конце периода", 
+            "MPn": "% выпускников-магистров на начало расчетного периода", 
+            "MPk": "% выпускников-магистров на конец расчетного периода", 
+            "BV": "% выпускников-бакалавров в начале периода, закончивших обучение в срок",     
+            "BC": "% выпускников-бакалавров в конце периода, закончивших обучение в срок",    
+            "BZ": "среднегодовое число зачисленных бакалавров",     
+            "MV": "количество выпускников-магистров в начале периода, закончивших обучение в срок",     
+            "MC": "количество выпускников-магистров в конце периода, закончивших обучение в срок",     
+            "MZ": "среднегодовое число зачисленных магистров",     
+            "C": "общее количество цитирований",     
+            "P": "общее количество публикаций",     
+            "PT": "количество публикаций по техническим дисциплинам",     
+            "PI": "количество публикаций в области искусств",     
+            "PJ": "количество междисциплинарных исследований",     
+            "PD": "количество публикаций по патентам",     
+            "PS": "прочие публикации",     
+            "G": "исследовательские гранты от национальных и международных финансовых учреждений",     
+            "IG": "гранты от научно-исследовательских советов и исследовательских фондов",     
+            "NG": "гранты от благотворительных и других некоммерческих организаций",    
+            "F": "общий объем финансирования вуза",     
+            "An": "количество публикаций в области искусств на начало расчетного периода",     
+            "Ak": "количество публикаций в области искусств на конец расчетного периода",     
+            "Vn": "количество часто цитируемых публикаций на начало расчетного периода",     
+            "Vk": "количество часто цитируемых публикаций на конец расчетного периода",     
+            "IDPn": "количество междисциплинарных публикаций на начало расчетного периода", 
+            "IDPk": "количество междисциплинарных публикаций на конец расчетного периода",     
+            "DPn": "% постдоков на начало расчетного периода", 
+            "DPk": "% постдоков на конец расчетного периода",     
+            "IPn": "% иностранных студентов на начало расчетного периода",     
+            "IPk": "% иностранных студентов на конец расчетного периода", 
+            "IB": "доходы от научных исследований для промышленности и бизнеса", 
+            "IN": "доходы от научных исследований для частных фондов, благотворительных и других некоммерческих организаций",     
+            "IL": "доходы от лицензирования", 
+            "DS": "совместные с другими организациями патенты",     
+            "DV": "патенты, зарегистрированные вузом",     
+            "DP": "прочие патенты",     
+            "JDn": "количество патентов, ссылающихся на промышленные предприятия, на начало расчетного периода",     
+            "JDk": "количество публикаций, ссылающихся на промышленные предприятия, на конец расчетного периода",     
+            "INn": "количество малых инновационных предприятий на начало расчетного периода",     
+            "INk": "количество малых инновационных предприятий на конец расчетного периода",     
+            "NPP": "общее количество научно-педагогического персонала",     
+            "PPn": "количество публикаций по патентам на начало расчетного периода", 
+            "PPk": "количество публикаций по патентам на конец расчетного периода",     
+            "Dn": "общее кол-во доходов от непрерывного проф.развития",     
+            "D": "общее кол-во доходов", 
+            "PBn": "количество программ на иностранных языках для бакалавров на начало расчетного периода",     
+            "PBk": "количество программ на иностранных языках для бакалавров на конец расчетного периода",     
+            "PB": "общее количество программ на иностранных языках для бакалавров",     
+            "PMn": "количество публикаций в области искусств на начало расчетного периода",     
+            "PMk": "количество публикаций в области искусств на конец расчетного периода", 
+            "OPn": "% студентов, участвующих в программах обмена на начало расчетного периода", 
+            "OPk": "% студентов, участвующих в программах обмена на конец расчетного периода", 
+            "JPn": "% студентов, участвующих в международных программах на начало расчетного периода",     
+            "JPk": "% студентов, участвующих в международных программах на конец расчетного периода", 
+            "ISPn": "% иностранных сотрудников на начало расчетного периода",     
+            "ISPk": "% иностранных сотрудников на конец расчетного периода", 
+            "MIPn": "количество публикаций с одним и более иностранных соавторов на начало расчетного периода",     
+            "MIPk": "количество публикаций с одним и более иностранных соавторов на конец расчетного периода",     
+            "IIDPn": "% иностранных выпускников-докторантов на начало расчетного периода",     
+            "IIDPk": "% иностранных выпускников-докторантов на конец расчетного периода", 
+            "BRPn": "количество междисциплинарных публикаций на начало расчетного периода", 
+            "BRPk": "количество междисциплинарных публикаций на конец расчетного периода",     
+            "MRPn": "% выпускников-магистров, работающих в регионе на начало расчетного периода", 
+            "MRPk": "% выпускников-магистров, работающих в регионе на конец расчетного периода",     
+            "SRPn": "% студентов, участвующих в программах обмена на начало расчетного периода",     
+            "SRPk": "% студентов, участвующих в программах обмена на конец расчетного периода", 
+            "RPn": "количество публикаций с одним и более соавтором, географически расположенном в том же регионе, на начало расчетного периода",     
+            "RPk": "количество публикаций с одним и более соавтором, географически расположенном в том же регионе, на конец расчетного периода",    
+            "IR": "доходы от научных исследований для промышленности и бизнеса в регионе",     
+            "NR": "доходы от научных исследований для региональных частных источников",    
+        }
+
+        const constsDiv = document.querySelector("#main .values .c .inputs")
+
+        for(let key in consts){
+            main_key = key.replace(/[nk]/, '');
+            sub_key = key.replace(main_key, '');
+            constsDiv.innerHTML +=
+            `<div class="input-block">
+                <label for="${key}">[${main_key}${sub_key ? `<sub>${sub_key}</sub>` : ''}] - ${consts[key]}</label>
+                <input id="${key}" type="number" step="0.001" min="0" max="1" required value="0.2">
+            </div>`;
+        }
+
+        // Полиномы
+        const funcs = {
+            "1": "3",
+            "2": "19",
+            "3": "21",
+            "4": "22",
+            "5": "23",
+            "6": "27",
+            "7": "29",
+            "8": "4",
+            "9": "20",
+            "10": "22",
+            "11": "23",
+            "12": "28",
+            "13": "29",
+            "14": "19",
+            "15": "20",
+            "16": "5",
+            "17": "8",
+            "18": "6",
+            "19": "10",
+            "20": "11",
+            "21": "12",
+            "22": "17",
+            "23": "25",
+            "24": "30",
+            "25": "14",
+            "28": "15",
+            "29": "16",
+            "31": "26",
+            "32": "21",
+            "33": "26",
+            "34": "30",
+        }
+
+        const funcsDiv = document.querySelector("#main .values .f .inputs")
+
+        for(let key in funcs){
+            funcsDiv.innerHTML +=
+            `<div class="function">
+                <label class="f-title" for="F${key}-d">F<sub>${key}</sub>(X<sub>${funcs[key]}</sub>)=</label>
+                <div class="function-block">
+                    <input id="F${key}-a" type="number" step="0.001" required value="0">
+                    <label for="F${key}-a">X<sup>3</sup><sub class="sub">${funcs[key]}</sub>+</label>
+                </div>
+                <div class="function-block">
+                    <input id="F${key}-b" type="number" step="0.001" required value="0">
+                    <label for="F${key}-b">X<sup>2</sup><sub class="sub">${funcs[key]}</sub>+</label>
+                </div>
+                <div class="function-block">
+                    <input id="F${key}-c" type="number" step="0.001" required value="1">
+                    <label for="F${key}-c">X<sub>${funcs[key]}</sub>+</label>
+                </div>
+                <div class="function-block">
+                    <input id="F${key}-d" type="number" step="0.001" required value="0">
+                </div>
+            </div>`;
+        }
+    </script>
+    <script>
+        const getData = () => {
+            const form = document.querySelector("#main");
+
+            //шаблон JSON-оъекта
+            let data = {
+                'x0': {},
+                'c': {},
+                'f': {},
+                'norm' : [],
+            };
+
+            //из каждого '.x0 .input-block' элемента, состоящего из 2-х input с данными о начальных значениях и границах нормы, извлекаем значения
+            let x0s = form.querySelectorAll(".x0 .input-block");
+            for (let i = 0; i < x0s.length; i++) {
+                let key = `X${(i + 1)}`;
+                data['x0'][key] = Number(x0s[i].querySelector(`#${key}`).value);
+                data['norm'].push(Number(x0s[i].querySelector(`#${key}max`).value));
+            }
+
+            //из каждого '.c .input-block' элемента, состоящего из input с данными о константах, извлекаем значения
+            let cs = form.querySelectorAll(".c .input-block");
+            for (let i = 0; i < cs.length; i++) {
+                let key = cs[i].querySelector("input").id;
+                data['c'][key] = Number(cs[i].querySelector("input").value);
+            }
+
+            //из каждого '.f .function' элемента, состоящего из 4-х input с коэффициентами полиномов, извлекаем значения
+            let fs = form.querySelectorAll(".f .function");
+            fs.forEach(elem => {
+                let frr = elem.querySelector("label").getAttribute("for")
+                let key = frr.substring(0, frr.length-2);
+
+                let valueA = elem.querySelector(`#${key}-a`).value;
+                let valueB = elem.querySelector(`#${key}-b`).value;
+                let valueC = elem.querySelector(`#${key}-c`).value;
+                let valueD = elem.querySelector(`#${key}-d`).value;
+
+                data['f'][`${key}`] = {
+                    a: Number(valueA),
+                    b: Number(valueB),
+                    c: Number(valueC),
+                    d: Number(valueD)
+                };
+            });
+
+            return data;
+        }
+
+        const save = () => {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getData()));
+            let dlAnchorElem = document.createElement("a");
+            dlAnchorElem.setAttribute("href",     dataStr     );
+            dlAnchorElem.setAttribute("download", "IPST1-2024.json");
+            dlAnchorElem.click();   
+        }
+
+        const load = () => {
+            const getFileElement = document.createElement("input");
+            getFileElement.setAttribute("type", "file");
+            getFileElement.click();
+            getFileElement.onchange = (event) => {
+                return new Promise((resolve, reject) => {
+                    const fileReader = new FileReader()
+                    fileReader.onload = (e) => {
+                        let obj = e.target.result;
+                        try{
+                            resolve(JSON.parse(obj));
+                        }
+                        catch {
+                            alert("Неверный формат файла");
+                        }
+                    }
+                    fileReader.readAsText(event.target.files[0]);
+                }).then(data => {
+
+                    let x0s = form.querySelectorAll(".x0 .input-block");
+                    for (let i = 0; i < x0s.length; i++) {
+                        let key = `X${(i + 1)}`;
+                        x0s[i].querySelector(`#${key}`).value = data['x0'][key];
+                        x0s[i].querySelector(`#${key}max`).value = data['norm'][i];
+                    }
+
+                    let cs = form.querySelectorAll(".c .input-block");
+                    for (let i = 0; i < cs.length; i++) {
+                        let key = cs[i].querySelector("input").id;
+                        cs[i].querySelector("input").value = data['c'][key];
+                    }
+
+                    let fs = form.querySelectorAll(".f .function");
+                    fs.forEach(elem => {
+                        let frr = elem.querySelector("label").getAttribute("for")
+                        let key = frr.substring(0, frr.length-2);
+
+                        elem.querySelector(`#${key}-a`).value = data['f'][`${key}`].a;
+                        elem.querySelector(`#${key}-b`).value = data['f'][`${key}`].b;
+                        elem.querySelector(`#${key}-c`).value = data['f'][`${key}`].c;
+                        elem.querySelector(`#${key}-d`).value = data['f'][`${key}`].d;
+                    });
+                }).catch((err => {
+                    alert(err);
+                }))
+            }
+        }
+    </script>
+    <script>
+
+        //Инициализация холстов для отрисовки графика и лепестковых диаграмм с применением Chart.js
+        const plot = document.getElementById('plot');
+        const radar1 = document.getElementById('radar1');
+        const radar2 = document.getElementById('radar2');
+        const radar3 = document.getElementById('radar3');
+        const radar4 = document.getElementById('radar4');
+        const radar5 = document.getElementById('radar5');
+        const radar6 = document.getElementById('radar6');
+
+        //основные элементы страницы
+        const form = document.querySelector("#main");
+        const resWin = document.getElementById('result');
+        const resultDown = document.getElementById('close');
+
+        //объект доступа к холстам с графиками и диаграммами
+        let chartObjects = {
+            'plot': null,
+            't = 0': null,
+            't = 0.2': null,
+            't = 0.4': null,
+            't = 0.6': null,
+            't = 0.8': null,
+            't = 1': null,
+        }
+
+        //при отправке формы - формируем JSON-объект, требуемый для POST-запроса на вычиления
+        form.onsubmit = (e) => {
+            e.preventDefault();
+
+            let localData = getData();
+
+            //выполняем запрос при помощи FETCH
+            fetch('/api/count', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(localData)
+            })
+                .then(res => res.json())
+                .then(res => {
+                    // на основе полученного ответа отриосвываем графики, на ранее заданных холстах:
+                    let sol = res['message'];
+                    creatrGraph(sol);
+                    createRadar('t = 0', radar1, sol[0], localData.norm);
+                    createRadar('t = 0.2', radar2, sol[4], localData.norm);
+                    createRadar('t = 0.4', radar3, sol[8], localData.norm);
+                    createRadar('t = 0.6', radar4, sol[12], localData.norm);
+                    createRadar('t = 0.8', radar5, sol[16], localData.norm);
+                    createRadar('t = 1', radar6, sol[20], localData.norm);
+                })
+                .then(
+                    res => {
+                        resWin.style.display = "flex"
+                    }
+                )
+                .catch(e => alert("Решение не найдено!"));
+                ;
+        }
+
+        //скрыть окно результатов при закрытии
+        resultDown.onclick = () => {
+            resWin.style.display = "none";
+        }
+
+        //отрисовка графиков изменения параметров xi(t) на основе объекта решений solution
+        const creatrGraph = (solution) => {
+
+            //удаляем старый график
+            chartObjects['plot']?.destroy();
+
+            //готовим шаблон для построения графика
+            let data = {
+                labels: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1],
+                datasets: [],
+            }
+
+            //заполняем массив datasets из шаблона
+            for (let i = 0; i < solution[0].length; i++) {
+
+                // получаем ряд значений для каждого параметра xi(t)
+                let values = [];
+                for (let j = 0; j < solution.length; j++) {
+                    values.push(solution[j][i]);
+                }
+
+                //формируем график очередного параметра xi(t)
+                let dataset = {
+                    label: 'X' + (i + 1),
+                    data: values,
+                    fill: false,
+                    borderColor: getColor(i),
+                    tension: 0.1,
+                    pointRadius: 0,
+                    borderDash: getLineStyle(i),
+                }
+                data.datasets.push(dataset);
+            }
+
+            // Отрисовываем график
+            chartObjects['plot'] = new Chart(plot, {
+                type: 'line',
+                data: data,
+                options: {
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                         }
+                    },
+                }
+            });
+        }
+
+        //отрисовка лепестковых диаграмм для заданного временного среза на основе:
+        // имени диаграммы chartName в объекте chartObjects
+        // элемента холста plot
+        // значений на срезе solutionI
+        // границах нормы norm
+        const createRadar = (chartName, plot, solutionI, norm) => {
+
+            //удаляем старую диаграмму
+            chartObjects[chartName]?.destroy();
+
+            //готовим шаблон для построения диаграммы
+            let data = {
+                labels: ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9', 'X10', 'X11', 'X12', 'X13', 'X14', 'X15', 'X16', 'X17', 'X18', 'X19', 'X20', 'X21', 'X22', 'X23', 'X24', 'X25', 'X26', 'X27', 'X28', 'X29', 'X30', 'X31'],
+                datasets: [
+                    {
+                        label: 'Значения параметров',
+                        data: solutionI,
+                        fill: false,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                    },
+                    {
+                        label: 'Границы нормы',
+                        data: norm,
+                        fill: true,
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderColor: 'rgb(255, 99, 132)',
+                    },
+                ],
+            }
+
+            // Отрисовываем диаграмму
+            chartObjects[chartName] = new Chart(plot, {
+                type: 'radar',
+                data: data,
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Срез значений при ' + chartName,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Стилизация графиков
+        const colors = ["red","orange","rgb(213, 216, 0)","rgb(7, 203, 0)","green","rgb(0, 207, 166)","blue","violet","purple","black","brown","gray"];
+
+        function getColor(i) {
+            return colors[i%colors.length];
+        }
+        
+        function getLineStyle(i) {
+            if (i <= colors.length - 1) return [];
+            if (i <= 2*colors.length - 1) return [5, 2];
+            if (i <= 3*colors.length - 1) return [20, 5, 20, 5];
+        }
+
+    </script>
+</body>
+
+</html>
