@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.env
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Общие
+*.log
+*.sqlite3
+*.db
+.DS_Store
+*.bak
+*.swp
+*.swo
+*.tmp
+
+# pipenv / poetry
+Pipfile.lock
+poetry.lock
+
+# pytest
+.cache/
+
+# mypy
+.mypy_cache/
+
+# coverage
+htmlcov/
+.coverage
+.coverage.*
+
+# pyright
+pyrightconfig.json
+
+# fastapi
+instance/
