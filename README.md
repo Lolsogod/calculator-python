@@ -4,7 +4,7 @@
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate  # Для Windows: venv\Scripts\activate
+source venv/bin/activate  # Для Windows: venv\Scripts\activate # Для Linux: . venv/bin/activate
 pip install -r requirements.txt
 ```
 
