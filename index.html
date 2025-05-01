@@ -372,7 +372,7 @@
                         <div class="inner-head">
                             <p class="p-title">Параметры</p>
                             <p class="p">Нач. зн.</p>
-                            <p class="p">Гран. зн.</p>
+                            <p class="p">Ниж. гран.</p>
                         </div>
                     </header>
 
@@ -414,15 +414,18 @@
         <section id="result">
             <div class="inner">
                 <header class="inner-header">
-                    <button type="button" id="normalize" onclick="toggleNormalization()">Нормализовать</button>
                     <button type="button" id="close">X</button>
                 </header>
                 <div class="graph scrollable">
                     <div class="plot-wrap">
-                        <canvas id="plot1"></canvas>
-                        <canvas id="plot2"></canvas>
-                        <canvas id="plot3"></canvas>
-                        <canvas id="plot4"></canvas>
+                            <canvas id="plot1"></canvas>
+                            <canvas id="plot2"></canvas>
+                            <canvas id="plot3"></canvas>
+                            <canvas id="plot4"></canvas>
+                            <canvas id="plot5"></canvas>
+                            <canvas id="plot6"></canvas>
+                            <canvas id="plot7"></canvas>
+                            <canvas id="plot8"></canvas>
                     </div>
                     <canvas id="radar1"></canvas>
                     <canvas id="radar2"></canvas>
@@ -438,6 +441,8 @@
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
+            const delta = 0.1 //дельта в двух местах, тк два скрипта, почему? я не знаю
+
             let isNormalized = false;
             let originalSolution = [];
             // Параметры
@@ -478,16 +483,31 @@
             const paramsDiv = document.querySelector("#main .values .x0 .inputs")
             const legendDiv = document.querySelector(".graph .legend")
 
-            for(let key in params){
-                paramsDiv.innerHTML +=
-                `<div class="input-block">
-                    <label for="X${key}">[X<sub>${key}</sub>] - ${params[key]}</label>
-                    <input id="X${key}" type="number" step="0.001" min="0" max="1" required value="0.5">
-                    <input id="X${key}max" type="number" step="0.001" min="0" max="1" required value="1">
-                </div>`;
+            for(let key in params) {
+                let randomValue1 = Math.round((Math.random() * (1 - delta) + delta) * 1000) / 1000;
+                let maxForSecond = randomValue1 - delta;
+                let randomValue2 = Math.round(Math.random() * maxForSecond * 1000) / 1000;
 
-                legendDiv.innerHTML +=
-                `<p>[X<sub>${key}</sub>] - ${params[key]}</p>`;
+                paramsDiv.innerHTML += `
+                    <div class="input-block">
+                        <label for="X${key}">[X<sub>${key}</sub>] - ${params[key]}</label>
+                        <input id="X${key}"
+                               type="number"
+                               step="0.001"
+                               min="0"
+                               max="1"
+                               required
+                               value="${randomValue1}">
+                        <input id="X${key}max"
+                               type="number"
+                               step="0.001"
+                               min="0"
+                               max="1"
+                               required
+                               value="${randomValue2}">
+                    </div>`;
+
+                legendDiv.innerHTML += `<p>[X<sub>${key}</sub>] - ${params[key]}</p>`;
             }
 
             // Константы
@@ -567,16 +587,24 @@
 
             const constsDiv = document.querySelector("#main .values .c .inputs")
 
-            for(let key in consts){
+           for(let key in consts) {
                 main_key = key.replace(/[nk]/, '');
                 sub_key = key.replace(main_key, '');
+
+                const randomConstValue = Math.round(Math.random() * 1000) / 1000;
+
                 constsDiv.innerHTML +=
                 `<div class="input-block">
                     <label for="${key}">[${main_key}${sub_key ? `<sub>${sub_key}</sub>` : ''}] - ${consts[key]}</label>
-                    <input id="${key}" type="number" step="0.001" min="0" max="1" required value="0.2">
+                    <input id="${key}"
+                           type="number"
+                           step="0.001"
+                           min="0"
+                           max="1"
+                           required
+                           value="${randomConstValue}">
                 </div>`;
             }
-
             // Полиномы
             const funcs = {
                 "1": "3",
@@ -638,52 +666,51 @@
         </script>
         <script>
             const getData = () => {
+                const delta = 0.1
                 const form = document.querySelector("#main");
-
-                //шаблон JSON-оъекта
                 let data = {
                     'x0': {},
                     'c': {},
                     'f': {},
-                    'norm' : [],
+                    'norm': [],
                 };
 
-                //из каждого '.x0 .input-block' элемента, состоящего из 2-х input с данными о начальных значениях и границах нормы, извлекаем значения
                 let x0s = form.querySelectorAll(".x0 .input-block");
                 for (let i = 0; i < x0s.length; i++) {
                     let key = `X${(i + 1)}`;
-                    data['x0'][key] = Number(x0s[i].querySelector(`#${key}`).value);
-                    data['norm'].push(Number(x0s[i].querySelector(`#${key}max`).value));
+                    data.x0[key] = Number(x0s[i].querySelector(`#${key}`).value);
+                    data.norm.push(Number(x0s[i].querySelector(`#${key}max`).value));
                 }
 
-                //из каждого '.c .input-block' элемента, состоящего из input с данными о константах, извлекаем значения
+                for (let i = 0; i < data.norm.length; i++) {
+                    const xKey = `X${i + 1}`;
+                    const requiredMax = data.x0[xKey] + delta;
+                    if (data.norm[i] >= requiredMax) {
+                        console.error(`Ошибка: norm[${i}] (${data.norm[i]}) >= x0.${xKey} (${data.x0[xKey]}) + delta (${delta})`);
+                        return null;
+                    }
+                }
+
                 let cs = form.querySelectorAll(".c .input-block");
                 for (let i = 0; i < cs.length; i++) {
                     let key = cs[i].querySelector("input").id;
-                    data['c'][key] = Number(cs[i].querySelector("input").value);
+                    data.c[key] = Number(cs[i].querySelector("input").value);
                 }
 
-                //из каждого '.f .function' элемента, состоящего из 4-х input с коэффициентами полиномов, извлекаем значения
                 let fs = form.querySelectorAll(".f .function");
                 fs.forEach(elem => {
-                    let frr = elem.querySelector("label").getAttribute("for")
+                    let frr = elem.querySelector("label").getAttribute("for");
                     let key = frr.substring(0, frr.length-2);
-
-                    let valueA = elem.querySelector(`#${key}-a`).value;
-                    let valueB = elem.querySelector(`#${key}-b`).value;
-                    let valueC = elem.querySelector(`#${key}-c`).value;
-                    let valueD = elem.querySelector(`#${key}-d`).value;
-
-                    data['f'][`${key}`] = {
-                        a: Number(valueA),
-                        b: Number(valueB),
-                        c: Number(valueC),
-                        d: Number(valueD)
+                    data.f[`${key}`] = {
+                        a: Number(elem.querySelector(`#${key}-a`).value),
+                        b: Number(elem.querySelector(`#${key}-b`).value),
+                        c: Number(elem.querySelector(`#${key}-c`).value),
+                        d: Number(elem.querySelector(`#${key}-d`).value)
                     };
                 });
 
                 return data;
-            }
+            };
 
             const save = () => {
                 let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getData()));
@@ -777,7 +804,7 @@
 
                             // Текст
                             ctx.font = '12px Arial';
-                            ctx.fillStyle = dataset.borderColor;
+                            ctx.fillStyle = 'black';
                             ctx.textAlign = 'center';
 
                             ctx.fillText(label.split('-')[0], x, y);
@@ -795,6 +822,10 @@
             const plot2 = document.getElementById('plot2');
             const plot3 = document.getElementById('plot3');
             const plot4 = document.getElementById('plot4');
+            const plot5 = document.getElementById('plot5');
+            const plot6 = document.getElementById('plot6');
+            const plot7 = document.getElementById('plot7');
+            const plot8 = document.getElementById('plot8');
             const radar1 = document.getElementById('radar1');
             const radar2 = document.getElementById('radar2');
             const radar3 = document.getElementById('radar3');
@@ -813,6 +844,10 @@
                 'plot2': null,
                 'plot3': null,
                 'plot4': null,
+                'plot5': null,
+                'plot6': null,
+                'plot7': null,
+                'plot8': null,
                 't = 0': null,
                 't = 0.2': null,
                 't = 0.4': null,
@@ -826,7 +861,10 @@
                 e.preventDefault();
 
                 let localData = getData();
-
+                if (!localData){
+                    alert('Ниж. гран. должна быть меньше Нач. зн. минимум на ' + delta)
+                    return
+                }
                 //выполняем запрос при помощи FETCH
                 fetch('/api/count', {
                     method: 'POST',
@@ -886,10 +924,14 @@
                 const processedSolution = isNormalized ? normalizeData(solution) : solution;
                 // Define parameter groups and their respective canvas IDs
                 const groups = [
-                    { start: 0, end: 7, canvasId: 'plot1', title: 'Parameters 1-8' },
-                    { start: 8, end: 15, canvasId: 'plot2', title: 'Parameters 9-16' },
-                    { start: 16, end: 23, canvasId: 'plot3', title: 'Parameters 17-24' },
-                    { start: 24, end: 30, canvasId: 'plot4', title: 'Parameters 25-31' }
+                    { start: 0, end: 3, canvasId: 'plot1', title: 'Parameters 1-4' },
+                    { start: 4, end: 7, canvasId: 'plot2', title: 'Parameters 5-8' },
+                    { start: 8, end: 11, canvasId: 'plot3', title: 'Parameters 9-12' },
+                    { start: 12, end: 15, canvasId: 'plot4', title: 'Parameters 13-16' },
+                    { start: 16, end: 19, canvasId: 'plot5', title: 'Parameters 17-20' },
+                    { start: 20, end: 23, canvasId: 'plot6', title: 'Parameters 21-24' },
+                    { start: 24, end: 27, canvasId: 'plot7', title: 'Parameters 25-28' },
+                    { start: 28, end: 30, canvasId: 'plot8', title: 'Parameters 29-31' }
                 ];
 
                 groups.forEach(group => {
@@ -1025,7 +1067,7 @@
             const colors = ["red","orange","rgb(213, 216, 0)","rgb(7, 203, 0)","green","rgb(0, 207, 166)","blue","violet","purple","black","brown","gray"];
 
             function getColor(index) {
-                const colors = ["red","orange","#d5d800","#07cb00","green","#00cfa6","blue","violet","purple","black","brown","gray"];
+                const colors = ["red","blue","green","orange"];
                 return colors[index % colors.length];
             }
 
