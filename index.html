@@ -405,7 +405,8 @@
             </div>
 
             <section class="manage">
-                <button class="count" type="submit">Рассчитать</button>
+                <button id="graphsBtn" class="count" type="button">Графики</button>
+                <button id="solutionBtn" class="count" type="button">Найти решение</button>
                 <button class="save" type="button" onclick="save()">Сохранить</button>
                 <button class="load" type="button" onclick="load()">Загрузить</button>
             </section>
@@ -856,44 +857,73 @@
                 't = 1': null,
             }
 
-            //при отправке формы - формируем JSON-объект, требуемый для POST-запроса на вычиления
-            form.onsubmit = (e) => {
+            // Кэш для результатов расчёта
+            let solutionCache = null;
+
+            const solutionBtn = document.getElementById('solutionBtn');
+            const graphsBtn   = document.getElementById('graphsBtn');
+
+            // Пока данных нет — графики строить нельзя
+            graphsBtn.disabled = true;
+            
+            function setPlaceholderCoeffs(coefMap) {
+                for (const key in coefMap) {
+                    const [a, b, c, d] = coefMap[key];
+                    document.getElementById(`F${key}-a`).value = a;
+                    document.getElementById(`F${key}-b`).value = b;
+                    document.getElementById(`F${key}-c`).value = c;
+                    document.getElementById(`F${key}-d`).value = d;
+                }
+            }
+
+            // Только получаем данные с бэка и кладём их в solutionCache
+            solutionBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
 
-                let localData = getData();
-                if (!localData){
-                    alert('Ниж. гран. должна быть меньше Нач. зн. минимум на ' + delta)
-                    return
+                const localData = getData();
+                if (!localData) {
+                    alert(`Ниж. гран. должна быть меньше Нач. зн. минимум на ${delta}`);
+                    return;
                 }
-                //выполняем запрос при помощи FETCH
-                fetch('/api/count', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json;charset=utf-8'
-                    },
-                    body: JSON.stringify(localData)
-                })
-                    .then(res => res.json())
-                    .then(res => {
-                        // на основе полученного ответа отриосвываем графики, на ранее заданных холстах:
-                        let sol = res['message'];
-                        console.log(sol)
-                        creatrGraph(sol);
-                        createRadar('t = 0', radar1, sol[0], localData.norm);
-                        createRadar('t = 0.2', radar2, sol[4], localData.norm);
-                        createRadar('t = 0.4', radar3, sol[8], localData.norm);
-                        createRadar('t = 0.6', radar4, sol[12], localData.norm);
-                        createRadar('t = 0.8', radar5, sol[16], localData.norm);
-                        createRadar('t = 1', radar6, sol[20], localData.norm);
-                    })
-                    .then(
-                        res => {
-                            resWin.style.display = "flex"
-                        }
-                    )
-                    .catch(e => console.log(e));
-                    ;
-            }
+
+                try {
+                    const resp = await fetch('/api/count', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json;charset=utf-8' },
+                        body: JSON.stringify(localData)
+                    });
+                    
+
+                    const { points, coefficients } = await resp.json();     // массив точек и массив коэффициентов полинома
+ 
+                    setPlaceholderCoeffs(coefficients)
+
+                    console.log(points)
+                    solutionCache = { points: points, norm: localData.norm };
+
+                    console.log('Данные успешно получены', solutionCache);
+                    graphsBtn.disabled = false;                // теперь можно рисовать
+                } catch (err) {
+                    console.error('Ошибка запроса /api/count:', err);
+                }
+            });
+
+            // Строим графики из ранее сохранённых точек
+            graphsBtn.addEventListener('click', () => {
+                if (!solutionCache) return;
+
+                const { points, norm } = solutionCache;
+
+                creatrGraph(points);
+                createRadar('t = 0',   radar1, points[0],  norm);
+                createRadar('t = 0.2', radar2, points[4],  norm);
+                createRadar('t = 0.4', radar3, points[8],  norm);
+                createRadar('t = 0.6', radar4, points[12], norm);
+                createRadar('t = 0.8', radar5, points[16], norm);
+                createRadar('t = 1',   radar6, points[20], norm);
+
+                resWin.style.display = 'flex';
+            });
 
             //скрыть окно результатов при закрытии
             resultDown.onclick = () => {

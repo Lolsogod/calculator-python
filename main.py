@@ -198,7 +198,8 @@ async def count(data  = Body()):
         # Получаем на выходе:
         # usolution - Решение системы в виде массива, элементы которого являются массивами решений для указанной точке на временной прямой
         # d - лог вычислений
-        usolution,d = odeint(du_dt, list(t0.values()), t_span, args=(c,f,), full_output=True)
+        usolution,d = odeint(du_dt, list(t0.values()), t_span, args=(c,f,), full_output=1, rtol=1e-60, atol=1e-80,
+                   mxstep=50000)
 
         # Если решение не определено для заданных параметров - вернуть ошибку
         if (d["message"] != "Integration successful."): raise HTTPException(status_code=500)
@@ -210,8 +211,15 @@ async def count(data  = Body()):
             solution[idx] = list(elem)
             idx = idx + 1
 
-        return JSONResponse(content={"message": solution})
+        # функции обозначил так, потому что в идентификаторах функций встреютчся почему-то пропуски. например, нет 26,27
+        FUNCS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,28,29,31,32,33,34]
+        coefficients = {k: [4, 3, 2, 1] for k in FUNCS}  # заглушка
+
+        return JSONResponse(content={"points": solution, "coefficients": coefficients})
     except:
         # При некорректно предоставленных в теле запроса данных
         raise HTTPException(status_code=500)
 
+# Надо подобрать такие коэфы полиномов, чтобы значения функций, которые мы строим на графике, были больше установленного порога
+# Порог надо будет выставлять отдельным полем, которое можно отобразить на главном экране. 
+# На фронт надо будет отдать значения коэфов
