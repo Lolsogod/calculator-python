@@ -3,7 +3,8 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 # Добавление зависимости для выполнения вычислений, связанных с диффурами
 from scipy. integrate import odeint
-
+import random
+from copy import deepcopy
 # Инициализация приложения FastAPI
 app = FastAPI()
 
@@ -162,6 +163,111 @@ async def main():
     # Возвращаем в качестве ответа HTML-страницу, расположенную по адресу /home/AlexAranara/my_fastapi/web/index.html
     return FileResponse("index.html")
 
+def find_solution2(t0, c, uf, x_threashold, iters_number=100):
+    # Устанавливаем значения t в диапазоне от 0 до 1 с шагом 0.05, при которых будут проводиться вычисления
+    t_span = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
+    
+    # На основе коэффициентов uf создадим удобные для работы экземпляры класса F, каждый из которых сопоставив с названием
+    # Соберем пары "Имя полинома" : <Экземпляр полинома> в словарь f
+    f = {}
+    for key in uf:
+        f[key] = F(uf[key]['a'],uf[key]['b'],uf[key]['c'],uf[key]['d'])
+    
+    # Передаем в качестве аргументов в функцию для решения системы диффуров odeint
+    # Параметры:
+    # du_dt - ранее описанная функция, выражающая систему уравнений Практической Работы 1
+    # list(t0.values()) - список начальных значений
+    # t_span - массив временных точек от 0 до 1
+    # args=(c,f,) - дополнительный аргументы в виде констант и полиномов
+    # full_output=True - для определения, решена ли система или нет
+    # Получаем на выходе:
+    # usolution - Решение системы в виде массива, элементы которого являются массивами решений для указанной точке на временной прямой
+    # d - лог вычислений
+    usolution,d = odeint(du_dt, list(t0.values()), t_span, args=(c,f,), full_output=True)
+
+    if (d["message"] != "Integration successful."): print("SDFSDF")
+
+    # функции обозначил так, потому что в идентификаторах функций встреютчся почему-то пропуски. например, нет 26,27
+    FUNCS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,28,29,31,32,33,34]
+    coefficients = {k: [0.4, 0.3, 0.2, 0.1] for k in FUNCS} 
+
+    return usolution, coefficients
+
+# FUNCS остаётся фиксированным набором индексов полиномов
+FUNCS = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 28, 29, 31, 32, 33, 34
+]
+
+
+def _random_coefficients() -> dict[int, list[float]]:
+    """Генерирует случайные коэффициенты (от 0 до 1) для всех полиномов."""
+    # return {k: [0, 0, 1, 0] for k in FUNCS}
+    return {k: [round(random.random(), 3) for _ in range(4)] for k in FUNCS}
+
+
+def _error_score(solution: list[list[float]], thresholds: list[float]) -> int:
+    """
+    Считает число графиков Xi, которые
+    хотя бы в одной точке ушли ниже своей нижней границы.
+    """
+    score = 0
+    for i in range(31):                     # X1 … X31
+        if any(row[i] < thresholds[i] for row in solution):
+            score += 1
+    return score
+
+
+def find_solution(t0: dict[str, float],
+                  c: list[float],
+                  uf,
+                  x_threshold: list[float],
+                  iters_number: int = 100):
+    """
+    Подбирает коэффициенты полиномов так, чтобы значения X1–X31
+    нигде не опускались ниже своих порогов.
+    Возвращает решение системы и найденные коэффициенты.
+    """
+    t_span = [i * 0.05 for i in range(21)]          # 0 … 1 с шагом 0.05
+
+    best_score = 31                                 # максимальное возможное
+    best_solution = None
+    best_coeffs = None
+
+    for _ in range(iters_number):
+        coeffs = _random_coefficients()
+        f = {k: F(*coeffs[int(k[1:])]) for k in uf}       # создаём экземпляры F
+
+        try:
+            usolution, d = odeint(
+                du_dt,
+                list(t0.values()),
+                t_span,
+                args=(c, f,),
+                full_output=True,
+                rtol=1e-3, 
+                atol=1e-3
+            )
+        except Exception:
+            continue
+
+        # odeint отдаёт numpy‑массив; переводим в чистые list
+        solution = [list(row) for row in usolution.tolist()]
+
+        score = _error_score(solution, x_threshold)
+
+        if score == 0:
+            return solution, coeffs, score                # найдено идеальное решение
+
+        if score < best_score:
+            best_score = score
+            best_solution = deepcopy(solution)
+            best_coeffs = deepcopy(coeffs)
+
+    # Если идеального решения нет, возвращаем лучшее найденное
+    return best_solution, best_coeffs, best_score
+
+
 # Указываем маршрут /api/count, по которому можно получить результаты вычислений для Практической работы 1
 # Тело данного POST-запрос имеет вид {"x0": <Словарь начальный значений>, "c": <Словарь констант>, "f": <Словарь полиномов>}
 # Записи <Словарь начальный значений> имеют вид "Имя значения": <значение>
@@ -169,56 +275,32 @@ async def main():
 # Записи <Словарь полиномов> имеют вид "Имя полинома": {"a": <значение>, "b": <значение>, "c": <значение>, "d": <значение> }
 @app.post("/api/count")
 async def count(data  = Body()):
-    try:
-        # Извлекаем пришедшие начальные значения в t0
-        t0 = data['x0']
+    # Извлекаем пришедшие начальные значения в t0
+    t0 = data['x0']
 
-        # Устанавливаем значения t в диапазоне от 0 до 1 с шагом 0.05, при которых будут проводиться вычисления
-        t_span = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
+    # Извлекаем пришедшие константы в с
+    c = data['c']
 
-        # Извлекаем пришедшие константы в с
-        c = data['c']
+    # Извлекаем пришедшие коэффициенты полиномов в uf
+    uf = data['f']
+    
+    x_threashold = data['norm']
 
-        # Извлекаем пришедшие коэффициенты полиномов в uf
-        uf = data['f']
+    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=1000)
+    print(usolution)
+    print('\n\n\n\n', coefficients)
+    print('\n\n\n\n', score)
 
-        # На основе коэффициентов uf создадим удобные для работы экземпляры класса F, каждый из которых сопоставив с названием
-        # Соберем пары "Имя полинома" : <Экземпляр полинома> в словарь f
-        f = {}
-        for key in uf:
-            f[key] = F(uf[key]['a'],uf[key]['b'],uf[key]['c'],uf[key]['d'])
 
-        # Передаем в качестве аргументов в функцию для решения системы диффуров odeint
-        # Параметры:
-        # du_dt - ранее описанная функция, выражающая систему уравнений Практической Работы 1
-        # list(t0.values()) - список начальных значений
-        # t_span - массив временных точек от 0 до 1
-        # args=(c,f,) - дополнительный аргументы в виде констант и полиномов
-        # full_output=True - для определения, решена ли система или нет
-        # Получаем на выходе:
-        # usolution - Решение системы в виде массива, элементы которого являются массивами решений для указанной точке на временной прямой
-        # d - лог вычислений
-        usolution,d = odeint(du_dt, list(t0.values()), t_span, args=(c,f,), full_output=1, rtol=1e-60, atol=1e-80,
-                   mxstep=50000)
+    # Преобразуем значения для отправки их в качестве JSON-ответа
+    solution = [None] * len(usolution)
+    idx = 0
+    for elem in usolution:
+        solution[idx] = list(elem)
+        idx = idx + 1
+    
 
-        # Если решение не определено для заданных параметров - вернуть ошибку
-        if (d["message"] != "Integration successful."): raise HTTPException(status_code=500)
-
-        # Преобразуем значения для отправки их в качестве JSON-ответа
-        solution = [None] * len(usolution)
-        idx = 0
-        for elem in usolution:
-            solution[idx] = list(elem)
-            idx = idx + 1
-
-        # функции обозначил так, потому что в идентификаторах функций встреютчся почему-то пропуски. например, нет 26,27
-        FUNCS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,28,29,31,32,33,34]
-        coefficients = {k: [4, 3, 2, 1] for k in FUNCS}  # заглушка
-
-        return JSONResponse(content={"points": solution, "coefficients": coefficients})
-    except:
-        # При некорректно предоставленных в теле запроса данных
-        raise HTTPException(status_code=500)
+    return JSONResponse(content={"message": solution, "coefficients": coefficients})
 
 # Надо подобрать такие коэфы полиномов, чтобы значения функций, которые мы строим на графике, были больше установленного порога
 # Порог надо будет выставлять отдельным полем, которое можно отобразить на главном экране. 

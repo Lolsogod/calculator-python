@@ -407,6 +407,7 @@
             <section class="manage">
                 <button id="graphsBtn" class="count" type="button">Графики</button>
                 <button id="solutionBtn" class="count" type="button">Найти решение</button>
+
                 <button class="save" type="button" onclick="save()">Сохранить</button>
                 <button class="load" type="button" onclick="load()">Загрузить</button>
             </section>
@@ -894,12 +895,12 @@
                     });
                     
 
-                    const { points, coefficients } = await resp.json();     // массив точек и массив коэффициентов полинома
+                    const { message, coefficients } = await resp.json();     // массив точек и массив коэффициентов полинома
  
                     setPlaceholderCoeffs(coefficients)
 
-                    console.log(points)
-                    solutionCache = { points: points, norm: localData.norm };
+                    console.log("asd")
+                    solutionCache = { points: message, norm: localData.norm };
 
                     console.log('Данные успешно получены', solutionCache);
                     graphsBtn.disabled = false;                // теперь можно рисовать
