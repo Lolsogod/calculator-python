@@ -203,7 +203,9 @@ FUNCS = [
 def _random_coefficients() -> dict[int, list[float]]:
     """Генерирует случайные коэффициенты (от 0 до 1) для всех полиномов."""
     # return {k: [0, 0, 1, 0] for k in FUNCS}
-    return {k: [round(random.random(), 3) for _ in range(4)] for k in FUNCS}
+    # return {k: [0, 0, 1, 0] for k in FUNCS}
+    # return {k: [round(random.random(), 3) for _ in range(4)] for k in FUNCS}
+    return {k: [0, 0] + [round(random.random(), 3) for _ in range(2)] for k in FUNCS}
 
 
 def _error_score(solution: list[list[float]], thresholds: list[float]) -> int:
@@ -245,8 +247,8 @@ def find_solution(t0: dict[str, float],
                 t_span,
                 args=(c, f,),
                 full_output=True,
-                rtol=1e-3, 
-                atol=1e-3
+                # rtol=1e-3, 
+                # atol=1e-3
             )
         except Exception:
             continue
