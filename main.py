@@ -204,8 +204,8 @@ def _random_coefficients() -> dict[int, list[float]]:
     """Генерирует случайные коэффициенты (от 0 до 1) для всех полиномов."""
     # return {k: [0, 0, 1, 0] for k in FUNCS}
     # return {k: [0, 0, 1, 0] for k in FUNCS}
-    # return {k: [round(random.random(), 3) for _ in range(4)] for k in FUNCS}
-    return {k: [0, 0] + [round(random.random(), 3) for _ in range(2)] for k in FUNCS}
+    return {k: [round(random.random(), 3) for _ in range(4)] for k in FUNCS}
+    # return {k: [0, 0] + [round(random.random(), 3) for _ in range(2)] for k in FUNCS}
 
 
 def _error_score(solution: list[list[float]], thresholds: list[float]) -> int:
@@ -215,7 +215,7 @@ def _error_score(solution: list[list[float]], thresholds: list[float]) -> int:
     """
     score = 0
     for i in range(31):                     # X1 … X31
-        if any(row[i] < thresholds[i] for row in solution):
+        if any(row[i] < thresholds[i] for row in solution) or any(row[i] > 5 for row in solution):
             score += 1
     return score
 
@@ -288,7 +288,7 @@ async def count(data  = Body()):
     
     x_threashold = data['norm']
 
-    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=1000)
+    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=10000)
     print(usolution)
     print('\n\n\n\n', coefficients)
     print('\n\n\n\n', score)
