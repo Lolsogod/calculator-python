@@ -200,7 +200,7 @@ def find_solution(t0: dict[str, float],
                   c: list[float],
                   uf,
                   x_threshold: list[float],
-                  iters_number: int = 100):
+                  iters_number: int):
     """
     Подбирает коэффициенты полиномов так, чтобы значения X1–X31
     нигде не опускались ниже своих порогов.
