@@ -716,9 +716,15 @@
             };
 
             const save = () => {
-                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getData()));
-                let dlAnchorElem = document.createElement("a");
-                dlAnchorElem.setAttribute("href",     dataStr     );
+                // Собираем и сохраняем текущее состояние
+                const state = {
+                    data: getData(),
+                    solutionCache: solutionCache
+                };
+                const dataStr = "data:text/json;charset=utf-8," 
+                    + encodeURIComponent(JSON.stringify(state));
+                const dlAnchorElem = document.createElement("a");
+                dlAnchorElem.setAttribute("href", dataStr);
                 dlAnchorElem.setAttribute("download", "IPST1-2024.json");
                 dlAnchorElem.click();
             }
@@ -729,45 +735,45 @@
                 getFileElement.click();
                 getFileElement.onchange = (event) => {
                     return new Promise((resolve, reject) => {
-                        const fileReader = new FileReader()
+                        const fileReader = new FileReader();
                         fileReader.onload = (e) => {
-                            let obj = e.target.result;
-                            try{
-                                resolve(JSON.parse(obj));
-                            }
-                            catch {
+                            try {
+                                resolve(JSON.parse(e.target.result));
+                            } catch {
                                 alert("Неверный формат файла");
                             }
                         }
                         fileReader.readAsText(event.target.files[0]);
-                    }).then(data => {
-
+                    }).then(state => {
+                        const data = state.data;
+                        // Восстанавливаем поля формы как раньше
                         let x0s = form.querySelectorAll(".x0 .input-block");
                         for (let i = 0; i < x0s.length; i++) {
                             let key = `X${(i + 1)}`;
-                            x0s[i].querySelector(`#${key}`).value = data['x0'][key];
-                            x0s[i].querySelector(`#${key}max`).value = data['norm'][i];
+                            x0s[i].querySelector(`#${key}`).value = data.x0[key];
+                            x0s[i].querySelector(`#${key}max`).value = data.norm[i];
                         }
-
                         let cs = form.querySelectorAll(".c .input-block");
                         for (let i = 0; i < cs.length; i++) {
                             let key = cs[i].querySelector("input").id;
-                            cs[i].querySelector("input").value = data['c'][key];
+                            cs[i].querySelector("input").value = data.c[key];
                         }
-
                         let fs = form.querySelectorAll(".f .function");
                         fs.forEach(elem => {
                             let frr = elem.querySelector("label").getAttribute("for")
                             let key = frr.substring(0, frr.length-2);
-
-                            elem.querySelector(`#${key}-a`).value = data['f'][`${key}`].a;
-                            elem.querySelector(`#${key}-b`).value = data['f'][`${key}`].b;
-                            elem.querySelector(`#${key}-c`).value = data['f'][`${key}`].c;
-                            elem.querySelector(`#${key}-d`).value = data['f'][`${key}`].d;
+                            elem.querySelector(`#${key}-a`).value = data.f[key].a;
+                            elem.querySelector(`#${key}-b`).value = data.f[key].b;
+                            elem.querySelector(`#${key}-c`).value = data.f[key].c;
+                            elem.querySelector(`#${key}-d`).value = data.f[key].d;
                         });
-                    }).catch((err => {
+
+                        // Восстанавливаем solutionCache и активируем графики
+                        solutionCache = state.solutionCache;
+                        if (solutionCache) graphsBtn.disabled = false;
+                    }).catch(err => {
                         alert(err);
-                    }))
+                    });
                 }
             }
         </script>
