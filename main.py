@@ -163,35 +163,6 @@ async def main():
     # Возвращаем в качестве ответа HTML-страницу, расположенную по адресу /home/AlexAranara/my_fastapi/web/index.html
     return FileResponse("index.html")
 
-def find_solution2(t0, c, uf, x_threashold, iters_number=100):
-    # Устанавливаем значения t в диапазоне от 0 до 1 с шагом 0.05, при которых будут проводиться вычисления
-    t_span = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
-    
-    # На основе коэффициентов uf создадим удобные для работы экземпляры класса F, каждый из которых сопоставив с названием
-    # Соберем пары "Имя полинома" : <Экземпляр полинома> в словарь f
-    f = {}
-    for key in uf:
-        f[key] = F(uf[key]['a'],uf[key]['b'],uf[key]['c'],uf[key]['d'])
-    
-    # Передаем в качестве аргументов в функцию для решения системы диффуров odeint
-    # Параметры:
-    # du_dt - ранее описанная функция, выражающая систему уравнений Практической Работы 1
-    # list(t0.values()) - список начальных значений
-    # t_span - массив временных точек от 0 до 1
-    # args=(c,f,) - дополнительный аргументы в виде констант и полиномов
-    # full_output=True - для определения, решена ли система или нет
-    # Получаем на выходе:
-    # usolution - Решение системы в виде массива, элементы которого являются массивами решений для указанной точке на временной прямой
-    # d - лог вычислений
-    usolution,d = odeint(du_dt, list(t0.values()), t_span, args=(c,f,), full_output=True)
-
-    if (d["message"] != "Integration successful."): print("SDFSDF")
-
-    # функции обозначил так, потому что в идентификаторах функций встреютчся почему-то пропуски. например, нет 26,27
-    FUNCS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,28,29,31,32,33,34]
-    coefficients = {k: [0.4, 0.3, 0.2, 0.1] for k in FUNCS} 
-
-    return usolution, coefficients
 
 # FUNCS остаётся фиксированным набором индексов полиномов
 FUNCS = [
@@ -202,11 +173,8 @@ FUNCS = [
 
 def _random_coefficients() -> dict[int, list[float]]:
     """Генерирует случайные коэффициенты (от 0 до 1) для всех полиномов."""
-    # return {k: [0, 0, 1, 0] for k in FUNCS}
-    # return {k: [0, 0, 1, 0] for k in FUNCS}
-    return {k: [round(random.random(), 3) for _ in range(4)] for k in FUNCS}
-    # return {k: [0, 0] + [round(random.random(), 3) for _ in range(2)] for k in FUNCS}
-
+    # Сейчас установлен диапазон для всех значений [0; 0.5]
+    return {k: [round(random.random() / 2, 3) for _ in range(4)] for k in FUNCS} 
 
 def _error_score(solution: list[list[float]], thresholds: list[float]) -> int:
     """
@@ -215,10 +183,18 @@ def _error_score(solution: list[list[float]], thresholds: list[float]) -> int:
     """
     score = 0
     for i in range(31):                     # X1 … X31
-        if any(row[i] < thresholds[i] for row in solution) or any(row[i] > 10 for row in solution):
+        if any(row[i] < thresholds[i] for row in solution):
             score += 1
     return score
 
+counter = 0
+def has_outliers(solution: list[list[float]]):
+    for i in range(31):                     
+        if any(row[i] > 15 for row in solution): # Здесь можно контролировать вылет
+            global counter
+            counter += 1
+            return True
+    return False
 
 def find_solution(t0: dict[str, float],
                   c: list[float],
@@ -247,14 +223,18 @@ def find_solution(t0: dict[str, float],
                 t_span,
                 args=(c, f,),
                 full_output=True,
-                # rtol=1e-3, 
-                # atol=1e-3
+                # rtol=1e-3, # Здесь можно поменять точность поиска решения
+                # atol=1e-3  # Здесь можно поменять точность поиска решения
             )
         except Exception:
             continue
 
         # odeint отдаёт numpy‑массив; переводим в чистые list
         solution = [list(row) for row in usolution.tolist()]
+
+
+        if has_outliers(solution):
+            continue
 
         score = _error_score(solution, x_threshold)
 
@@ -288,10 +268,9 @@ async def count(data  = Body()):
     
     x_threashold = data['norm']
 
-    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=100)
-    print(usolution)
-    print('\n\n\n\n', coefficients)
-    print('\n\n\n\n', score)
+    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=3000) # Менять кол-во итераций ЗДЕСЬ!
+    print('Количество функций, которые вышли за нижнюю границу: ', score)
+    print('Количество комбинаций во время перебора, при которых где-то случился вылет за верхнюю границу: ', counter)
 
 
     # Преобразуем значения для отправки их в качестве JSON-ответа
@@ -301,7 +280,6 @@ async def count(data  = Body()):
         solution[idx] = list(elem)
         idx = idx + 1
     
-
     return JSONResponse(content={"message": solution, "coefficients": coefficients})
 
 # Надо подобрать такие коэфы полиномов, чтобы значения функций, которые мы строим на графике, были больше установленного порога

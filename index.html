@@ -593,7 +593,8 @@
                 main_key = key.replace(/[nk]/, '');
                 sub_key = key.replace(main_key, '');
 
-                const randomConstValue = Math.round((0.44 + Math.random() * 0.1) * 1000) / 1000;
+                // Рандомная константа от 0.45 до 0.55
+                const randomConstValue = Math.round((0.45 + Math.random() * 0.1) * 1000) / 1000;
 
                 constsDiv.innerHTML +=
                 `<div class="input-block">
@@ -875,6 +876,7 @@
                     document.getElementById(`F${key}-c`).value = c;
                     document.getElementById(`F${key}-d`).value = d;
                 }
+                alert("Решение найдено");
             }
 
             // Только получаем данные с бэка и кладём их в solutionCache
@@ -904,7 +906,6 @@
 
                     console.log('Данные успешно получены', solutionCache);
                     graphsBtn.disabled = false;                // теперь можно рисовать
-                    // alert("Готово");
                 } catch (err) {
                     console.error('Ошибка запроса /api/count:', err);
                 }
