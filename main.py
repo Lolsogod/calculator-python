@@ -268,11 +268,15 @@ async def count(data  = Body()):
     
     x_threashold = data['norm']
 
-    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=3000) # Менять кол-во итераций ЗДЕСЬ!
+    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=30) # Менять кол-во итераций ЗДЕСЬ!
     print('Количество функций, которые вышли за нижнюю границу: ', score)
     print('Количество комбинаций во время перебора, при которых где-то случился вылет за верхнюю границу: ', counter)
 
 
+    if usolution is None:
+        print("Найти решение для таких входных данных не удалось")
+        return JSONResponse(status_code=400, content={"error": "Найти решение для таких входных данных не удалось"})
+    
     # Преобразуем значения для отправки их в качестве JSON-ответа
     solution = [None] * len(usolution)
     idx = 0

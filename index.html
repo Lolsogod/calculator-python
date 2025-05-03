@@ -901,7 +901,12 @@
                         headers: { 'Content-Type': 'application/json;charset=utf-8' },
                         body: JSON.stringify(localData)
                     });
-                    
+
+                    if (resp.status === 400) {
+                        const { error } = await resp.json();
+                        alert(error);
+                        return;
+                    }
 
                     const { message, coefficients } = await resp.json();     // массив точек и массив коэффициентов полинома
  
