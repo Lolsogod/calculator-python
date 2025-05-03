@@ -268,7 +268,7 @@ async def count(data  = Body()):
     
     x_threashold = data['norm']
 
-    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=30) # Менять кол-во итераций ЗДЕСЬ!
+    usolution, coefficients, score  = find_solution(t0, c, uf, x_threashold, iters_number=3000) # Менять кол-во итераций ЗДЕСЬ!
     print('Количество функций, которые вышли за нижнюю границу: ', score)
     print('Количество комбинаций во время перебора, при которых где-то случился вылет за верхнюю границу: ', counter)
 
