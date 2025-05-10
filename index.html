@@ -809,8 +809,6 @@
                         // Восстанавливаем solutionCache и активируем графики
                         solutionCache = state.solutionCache;
                         if (solutionCache) graphsBtn.disabled = false;
-
-                        solutionBtn.click()
                     }).catch(err => {
                         alert(err);
                     });
