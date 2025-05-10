@@ -5,6 +5,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from scipy. integrate import odeint
 import random
 from copy import deepcopy
+
+import numpy as np
+from collections import OrderedDict
 # Инициализация приложения FastAPI
 app = FastAPI()
 
@@ -276,6 +279,14 @@ async def count(data  = Body()):
     if usolution is None:
         print("Найти решение для таких входных данных не удалось")
         return JSONResponse(status_code=400, content={"error": "Найти решение для таких входных данных не удалось"})
+
+    # Добавляем аппроксимацию для каждой функции
+    approximations = {}
+    t_span = np.array([i * 0.05 for i in range(21)])  # временные точки 0..1 с шагом 0.05
+
+    for i in range(31):  # X1..X31
+        y_data = np.array([row[i] for row in usolution])
+        approximations[f'X{i + 1}'] = approximate(t_span, y_data)
     
     # Преобразуем значения для отправки их в качестве JSON-ответа
     solution = [None] * len(usolution)
@@ -283,8 +294,73 @@ async def count(data  = Body()):
     for elem in usolution:
         solution[idx] = list(elem)
         idx = idx + 1
-    
-    return JSONResponse(content={"message": solution, "coefficients": coefficients})
+
+    return JSONResponse(content={
+        "message": solution,
+        "coefficients": coefficients,
+        "approximations": approximations
+    })
+
+# Добавляем функцию для аппроксимации
+def approximate(x_data, y_data):
+    try:
+        t = np.polyfit(x_data, y_data, 4)
+        popt = np.poly1d(t)
+
+        formula = ''.join(format_polynomial(t))
+        return {
+            'formula': formula
+        }
+    except:
+        return None
+
+# Преобразование в строку с надстрочными символами
+def format_polynomial(coeffs):
+    # Словарь для надстрочных символов
+    superscripts = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+
+    terms = OrderedDict()
+    degree = len(coeffs) - 1
+
+    for i, coeff in enumerate(coeffs):
+        current_degree = degree - i
+        if current_degree == 0:
+            terms[current_degree] = f"{coeff:.7f}".rstrip('0').rstrip('.')
+        else:
+            # Форматируем коэффициент
+            if abs(coeff) < 0.0001:
+                coeff_str = f"{coeff:.2e}".replace("e-0", "e-").replace("e+0", "e+")
+            else:
+                coeff_str = f"{coeff:.7f}".rstrip('0').rstrip('.')
+
+            # Формируем часть с x
+            if current_degree == 1:
+                x_part = "x"
+            else:
+                x_part = f"x{str(current_degree).translate(superscripts)}"
+
+            terms[current_degree] = f"{coeff_str}{x_part}"
+
+    # Собираем все члены в строку
+    poly_str = []
+    for deg in sorted(terms.keys(), reverse=True):
+        term = terms[deg]
+        if term.startswith('-'):
+            term = term[1:]
+            sign = "- "
+        else:
+            sign = "+ "
+
+        if not poly_str:  # Первый элемент
+            if terms[deg].startswith('-'):
+                poly_str.append(f"-{term}")
+            else:
+                poly_str.append(term)
+        else:
+            poly_str.append(f"{sign}{term}")
+
+    return ' '.join(poly_str)
+
 
 # Надо подобрать такие коэфы полиномов, чтобы значения функций, которые мы строим на графике, были больше установленного порога
 # Порог надо будет выставлять отдельным полем, которое можно отобразить на главном экране. 

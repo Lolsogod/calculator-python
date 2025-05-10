@@ -339,8 +339,41 @@
                 justify-content: center;
                 align-items: center;
             }
-            .legend{
-                padding:2px;
+
+            .approximations {
+                padding: 20px;
+                background-color: white;
+                border: 1px solid #ddd;
+                margin-left: 20px;
+                overflow-y: auto;
+                max-height: 90vh;
+                margin-right: 10px;
+            }
+
+            .legend {
+                padding: 20px;
+                background-color: white;
+                border: 1px solid #ddd;
+                margin-left: 20px;
+                overflow-y: auto;
+                max-height: 90vh;
+            }
+
+            .legends {
+                display: flex;
+                gap: 10px;
+                margin-top: 10px;
+            }
+
+            .approximation {
+                margin: 10px 0;
+                padding: 10px;
+                background-color: #f8f8f8;
+                border-left: 3px solid #4CAF50;
+            }
+
+            .approximation p {
+                margin: 5px 0;
             }
 
             @media(max-width: 1024px){
@@ -435,7 +468,12 @@
                     <canvas id="radar4"></canvas>
                     <canvas id="radar5"></canvas>
                     <canvas id="radar6"></canvas>
-                    <div class="legend">
+                    <div class="legends">
+                        <div class="legend">
+                            <h3>Легенда:</h3>
+                        </div>
+                        <div class="approximations">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -908,11 +946,11 @@
                         return;
                     }
 
-                    const { message, coefficients } = await resp.json();     // массив точек и массив коэффициентов полинома
+                    const { message, coefficients, approximations } = await resp.json();     // массив точек и массив коэффициентов полинома
  
                     setPlaceholderCoeffs(coefficients)
 
-                    solutionCache = { points: message, norm: localData.norm };
+                    solutionCache = { points: message, norm: localData.norm, approximations: approximations };
 
                     console.log('Данные успешно получены', solutionCache);
                     graphsBtn.disabled = false;                // теперь можно рисовать
@@ -935,8 +973,27 @@
                 createRadar('t = 0.8', radar5, points[16], norm);
                 createRadar('t = 1',   radar6, points[20], norm);
 
+                displayApproximations();
+
                 resWin.style.display = 'flex';
             });
+
+          function displayApproximations() {
+              if (!solutionCache.approximations) return;
+
+              const approximationDiv = document.querySelector('.approximations');
+              approximationDiv.innerHTML = '<h3>Аппроксимации:</h3>';
+
+              for (const [param, approx] of Object.entries(solutionCache.approximations)) {
+                  const paramName = params[param.substring(1)]; // Получаем описание параметра
+                  approximationDiv.innerHTML += `
+            <div class="approximation">
+                <p><strong>${param}</strong> (${paramName}):</p>
+                <p>${approx.formula}</p>
+            </div>
+        `;
+              }
+          }
 
             //скрыть окно результатов при закрытии
             resultDown.onclick = () => {
