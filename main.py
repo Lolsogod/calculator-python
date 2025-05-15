@@ -287,7 +287,7 @@ async def count(data  = Body()):
     for i in range(31):  # X1..X31
         y_data = np.array([row[i] for row in usolution])
         approximations[f'X{i + 1}'] = approximate(t_span, y_data)
-    
+
     # Преобразуем значения для отправки их в качестве JSON-ответа
     solution = [None] * len(usolution)
     idx = 0
@@ -305,7 +305,6 @@ async def count(data  = Body()):
 def approximate(x_data, y_data):
     try:
         t = np.polyfit(x_data, y_data, 4)
-        popt = np.poly1d(t)
 
         formula = ''.join(format_polynomial(t))
         return {
