@@ -7,6 +7,19 @@
         <title>ТИПС2024 - Работа 1</title>
         <meta name="description" content="By Ovchinnikov A., Grebennikova E., Suchkov D.">
         <style>
+            .spinner {
+                display: inline-block;
+                width: 1em;
+                height: 1em;
+                border: 2px solid rgba(255,255,255,.3);
+                border-radius: 50%;
+                border-top-color: #fff;
+                animation: spin 1s ease-in-out infinite;
+            }
+
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
             .scrollable::-webkit-scrollbar {
                 width: 10px;
             }
@@ -924,12 +937,19 @@
             }
 
             // Только получаем данные с бэка и кладём их в solutionCache
-            solutionBtn.addEventListener('click', async (e) => {
+             solutionBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
+                const button = e.target;
+                const originalText = button.innerHTML;
+
+                button.innerHTML = '<div class="spinner"></div>';
+                button.disabled = true;
 
                 const localData = getData();
                 if (!localData) {
                     alert(`Ниж. гран. должна быть меньше Нач. зн. минимум на ${delta}`);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
                     return;
                 }
 
@@ -943,19 +963,18 @@
                     if (resp.status === 400) {
                         const { error } = await resp.json();
                         alert(error);
-                        return;
+                    } else {
+                        const { message, coefficients, approximations } = await resp.json();
+                        setPlaceholderCoeffs(coefficients);
+                        solutionCache = { points: message, norm: localData.norm, approximations: approximations };
+                        graphsBtn.disabled = false;
                     }
-
-                    const { message, coefficients, approximations } = await resp.json();     // массив точек и массив коэффициентов полинома
- 
-                    setPlaceholderCoeffs(coefficients)
-
-                    solutionCache = { points: message, norm: localData.norm, approximations: approximations };
-
-                    console.log('Данные успешно получены', solutionCache);
-                    graphsBtn.disabled = false;                // теперь можно рисовать
                 } catch (err) {
                     console.error('Ошибка запроса /api/count:', err);
+                    alert('Ошибка соединения с сервером');
+                } finally {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
                 }
             });
 
@@ -1086,6 +1105,38 @@
                                 title: { display: true, text: group.title },
                                 font: {
                                     size: 24
+                                }
+                            },
+                             scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Время, t',
+                                        font: {
+                                            size: 16,
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 14
+                                        }
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Значение характеристики',
+                                        font: {
+                                            size: 16,
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 14
+                                        }
+                                    }
                                 }
                             }
                         },
